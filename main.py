@@ -3,7 +3,6 @@ import tkinter
 from tkinter import filedialog
 from tkinter import messagebox
 
-export_file_name = ""
 default_hull_json = {"size": 1.0, "maxLife": 10, "lightSrcPos": [],
                      "hasBase": False, "forceBeaconPos": [], "doorPos": [],
                      "type": "std", "engine": None, "ability": {},
@@ -13,13 +12,13 @@ hull_json = default_hull_json.copy()
 hull_json_descriptions = {"size": "How big do you want your ship to be (float)",
                           "maxLife": "Total amount of health the ship has (int)",
                           "lightSrcPos": "",
-                          "hasBase": "",
+                          "hasBase": "hasBase (???)",
                           "forceBeaconPos": "",
                           "doorPos": "",
                           "type": "Hull type: one of `std`, `big`, `station`",
                           "engine": "Fully qualified engine name, blank for "
                                     "none (str)",
-                          "ability": "",
+                          "ability": "Select ability your ship will have",
                           "displayName": "Name of the ship (str)",
                           "price": "Price of the ship (int)",
                           "hirePrice": "Price of the ship to hire (int)",
@@ -32,9 +31,27 @@ b2d_json_label_text = "Open b2d file to use for physics,\nnone is loaded now"
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         super(Application, self).__init__(master)
+        self.hasBase = tkinter.IntVar()
         self.pack(anchor="n")
         self.entries = {}
         self.create_widgets()
+        self.ability_property_name = tkinter.StringVar()
+        self.ability_property_name.set("")
+        self.ability_type = tkinter.StringVar()
+        self.ability_property_value = tkinter.StringVar()
+        self.ability_recharge_time = tkinter.StringVar()
+        self.configure_ability_on_load()
+
+    def configure_ability_on_load(self):
+        if "type" in hull_json["ability"]:
+            self.ability_type.set(hull_json["ability"]["type"])
+            self.ability_configurer()
+            self.ability_property_value.set(str(hull_json["ability"][
+                                                    self.ability_property_name.get()]))
+            self.ability_recharge_time.set(str(hull_json["ability"][
+                                                   "rechargeTime"]))
+        else:
+            self.ability_type.set("None")
 
     def create_widgets(self):
         left_column = tkinter.Frame(self, width=400, height=600)
@@ -60,8 +77,84 @@ class Application(tkinter.Frame):
         self.entry_widgets(left_column, "hirePrice", 3)
         self.engine_widgets(left_column, 15)
 
-        # MaxLife
+        # Default values for entry fields
         self.insert_default_values()
+
+        # hasBase
+        self.hasBase_widgets(right_column)
+
+        # ability
+        self.ability_widgets(right_column)
+
+    def ability_widgets(self, right_column):
+        frame = tkinter.Frame(right_column,
+                              width=400,
+                              borderwidth=1,
+                              relief="ridge")
+        frame.pack(side="top", pady=2)
+        tkinter.Label(frame, text=hull_json_descriptions["ability"]).pack(
+            side="left", padx=5, pady=5)
+        tkinter.Button(frame, text="...", command=self.ability_chooser).pack(
+            side="right", padx=5, pady=5)
+
+    def ability_chooser(self):
+        self.temp_window = tkinter.Toplevel(self, width=400)
+        frame_one = tkinter.Frame(self.temp_window)
+        frame_one.pack(side="top", padx=5, pady=5)
+        tkinter.OptionMenu(frame_one, self.ability_type, "None", "sloMo",
+                           "teleport",
+                           "knockBack", "emWave", "unShield").pack(side="left")
+        tkinter.Button(frame_one, text="Select ability",
+                       command=self.ability_configurer).pack(side="right")
+        frame_two = tkinter.Frame(self.temp_window)
+        frame_two.pack(side="top", padx=5, pady=5)
+        tkinter.Label(frame_two, textvariable=self.ability_property_name).pack(
+            side="left")
+        tkinter.Entry(frame_two, width=4,
+                      textvariable=self.ability_property_value).pack()
+        frame_rechargetime = tkinter.Frame(self.temp_window)
+        frame_rechargetime.pack(side="top", padx=5, pady=5)
+        tkinter.Label(frame_rechargetime, text="Recharge time").pack(
+            side="left")
+        tkinter.Entry(frame_rechargetime, width=2,
+                      textvariable=self.ability_recharge_time).pack(
+            side="right")
+        tkinter.Button(self.temp_window, text="Save and Exit",
+                       command=self.ability_save_and_exit).pack(side="top")
+
+    def ability_configurer(self):
+        if self.ability_type.get() == "teleport":
+            self.ability_property_name.set("angle")
+        elif self.ability_type.get() == "sloMo":
+            self.ability_property_name.set("factor")
+        elif self.ability_type.get() == "knockBack":
+            self.ability_property_name.set("force")
+        elif self.ability_type.get() == "emWave":
+            self.ability_property_name.set("duration")
+        elif self.ability_type.get() == "unShield":
+            self.ability_property_name.set("amount")
+        elif self.ability_type.get() == "None":
+            self.ability_property_name.set("")
+
+    def hasBase_widgets(self, right_column):
+        frame = tkinter.Frame(right_column,
+                              width=400,
+                              borderwidth=1,
+                              relief="ridge")
+        frame.pack(side="top", pady=2)
+        tkinter.Checkbutton(frame,
+                            text=hull_json_descriptions["hasBase"],
+                            variable=self.hasBase,
+                            ).pack(side="left", padx=5, pady=5)
+
+    def ability_save_and_exit(self):
+        if self.ability_type.get() != "None":
+            hull_json["ability"]["type"] = self.ability_type.get()
+            hull_json["ability"][self.ability_property_name.get()] = \
+                int(self.ability_property_value.get())
+            hull_json["ability"]["rechargeTime"] = \
+                int(self.ability_recharge_time.get())
+        self.temp_window.destroy()
 
     def entry_widgets(self, column, param_name, entry_width):
         frame = tkinter.Frame(column,
@@ -102,7 +195,7 @@ class Application(tkinter.Frame):
                        command=dumpHullJSON).pack(side="left", padx=5, pady=5)
         tkinter.Button(export_exit_frame,
                        text="Exit",
-                       command=exit).pack(side="right", padx=5, pady=5)
+                       command=self.quit).pack(side="right", padx=5, pady=5)
 
     def load_b2d_file_widgets(self, left_column):
         load_b2d_json_frame = tkinter.Frame(left_column,
@@ -133,7 +226,7 @@ class Application(tkinter.Frame):
 
 
 def loadHullJSON():
-    global hull_json, export_file_name, default_hull_json
+    global hull_json, default_hull_json
     name = filedialog.askopenfilename(
         filetypes=[("JSON files", ".json"), ("All Files", "*")],
         parent=app,
@@ -142,10 +235,7 @@ def loadHullJSON():
     if name == () or name == "":
         return
     hull_json = {**default_hull_json, **json.load(open(name))}
-    if messagebox.askyesno("Use as output?",
-                           "Do you wish to set the selected file as file to "
-                           "write the created JSON later into?"):
-        export_file_name = name
+    app.configure_ability_on_load()
 
 
 def loadB2DFile():
@@ -174,31 +264,33 @@ def loadB2DFile():
 
 
 def dumpHullJSON():
-    global export_file_name, hull_json, b2d_file
+    global hull_json, b2d_file
     # for whatever reason, filedialogs returns either () or "" on Cancel
+    export_file_name = filedialog.asksaveasfilename(
+        defaultextension=".json",
+        filetypes=[("JSON files", "*.json")],
+        initialdir="~",
+        parent=app
+    )
     if export_file_name == "" or export_file_name == ():
-        export_file_name = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json")],
-            initialdir="~",
-            parent=app
-        )
-        if export_file_name == "" or export_file_name == ():
+        return
+    app_entries = {k: v.get() for k, v in app.entries.items()}
+    hull_json.update(b2d_file)
+    hull_json.update(app_entries)
+    hull_json["engine"] = app.engine_entry.get() if app.engine_entry.get(
+    ) != "" else None
+    hull_json["hasBase"] = app.hasBase.get() == 1
+    if "rigidBody" not in hull_json:
+        if not messagebox.askyesno(
+                message="There is no physics mesh active. For making the "
+                        "ship usable, please import a b2d physics mesh "
+                        "using the button `Load b2d file`. You may still "
+                        "choose to continue with exporting the hull file; "
+                        "to make it usable, you will, however, still have "
+                        "to include the physics mesh. Do you wish to "
+                        "continue?"):
+            print("hi")
             return
-        app_entries = {k: v.get() for k, v in app.entries.items()}
-        hull_json.update(b2d_file)
-        hull_json.update(app_entries)
-        hull_json["engine"] = app.engine_entry.get()
-        if "rigidBody" not in hull_json:
-            if not messagebox.askyesno(
-                    message="There is no physics mesh active. For making the "
-                            "ship usable, please import a b2d physics mesh "
-                            "using the button `Load b2d file`. You may still "
-                            "choose to continue with exporting the hull file; "
-                            "to make it usable, you will, however, still have "
-                            "to include the physics mesh. Do you wish to "
-                            "continue?"):
-                return
     with open(export_file_name, "w") as export_file:
         json.dump(hull_json,
                   export_file,
