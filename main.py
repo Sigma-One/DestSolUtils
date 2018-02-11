@@ -3,6 +3,8 @@ import tkinter
 from tkinter import filedialog
 from tkinter import messagebox
 
+sticky_we = tkinter.W+tkinter.E
+
 default_hull_json = {"size": 1.0, "maxLife": 10, "lightSrcPos": [],
                      "hasBase": False, "forceBeaconPos": [], "doorPos": [],
                      "type": "std", "engine": None, "ability": {},
@@ -31,6 +33,7 @@ b2d_json_label_text = "Open b2d file to use for physics,\nnone is loaded now"
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         super(Application, self).__init__(master)
+
         self.hasBase = tkinter.IntVar()
         self.pack(anchor="n")
         self.entries = {}
@@ -46,18 +49,16 @@ class Application(tkinter.Frame):
         if "type" in hull_json["ability"]:
             self.ability_type.set(hull_json["ability"]["type"])
             self.ability_configurer()
-            self.ability_property_value.set(str(hull_json["ability"][
-                                                    self.ability_property_name.get()]))
-            self.ability_recharge_time.set(str(hull_json["ability"][
-                                                   "rechargeTime"]))
+            self.ability_property_value.set(str(hull_json["ability"][self.ability_property_name.get()]))
+            self.ability_recharge_time.set(str(hull_json["ability"]["rechargeTime"]))
         else:
             self.ability_type.set("None")
 
     def create_widgets(self):
         left_column = tkinter.Frame(self, width=400, height=600)
-        left_column.pack(side="left", anchor="nw", ipadx=5)
+        left_column.grid(row=0, column=0, sticky=tkinter.N)
         right_column = tkinter.Frame(self, width=400, height=600)
-        right_column.pack(side="right", anchor="ne", ipadx=5)
+        right_column.grid(row=0, column=1, sticky=tkinter.N)
 
         # Load pre-created JSON
         self.load_hull_json_widgets(left_column)
@@ -69,13 +70,13 @@ class Application(tkinter.Frame):
         self.export_exit_widgets(right_column)
 
         # Int/Float/String fields
-        self.entry_widgets(left_column, "size", 4)
-        self.entry_widgets(left_column, "maxLife", 3)
-        self.entry_widgets(left_column, "type", 7)
-        self.entry_widgets(left_column, "displayName", 10)
-        self.entry_widgets(left_column, "price", 3)
-        self.entry_widgets(left_column, "hirePrice", 3)
-        self.engine_widgets(left_column, 15)
+        self.entry_widgets(left_column, "size", 4, 0)
+        self.entry_widgets(left_column, "maxLife", 3, 1)
+        self.entry_widgets(left_column, "type", 7, 2)
+        self.entry_widgets(left_column, "displayName", 10, 3)
+        self.entry_widgets(left_column, "price", 3, 4)
+        self.entry_widgets(left_column, "hirePrice", 3, 5)
+        self.engine_widgets(left_column, 15, 6)
 
         # Default values for entry fields
         self.insert_default_values()
@@ -86,41 +87,97 @@ class Application(tkinter.Frame):
         # ability
         self.ability_widgets(right_column)
 
+    # right column items
+
+    # hasBase(?) checkbox
+    def hasBase_widgets(self, right_column):
+        frame = tkinter.Frame(right_column, width=400, borderwidth=1, relief="ridge")
+        frame.grid(row=0, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Checkbutton(frame, text=hull_json_descriptions["hasBase"], variable=self.hasBase).grid(row=0, column=0)
+
+    # ability chooser button
     def ability_widgets(self, right_column):
-        frame = tkinter.Frame(right_column,
-                              width=400,
-                              borderwidth=1,
-                              relief="ridge")
-        frame.pack(side="top", pady=2)
-        tkinter.Label(frame, text=hull_json_descriptions["ability"]).pack(
-            side="left", padx=5, pady=5)
-        tkinter.Button(frame, text="...", command=self.ability_chooser).pack(
-            side="right", padx=5, pady=5)
+        frame = tkinter.Frame(right_column, width=400, borderwidth=1, relief="ridge")
+        frame.grid(row=1, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Label(frame, text=hull_json_descriptions["ability"]).grid(row=0, column=0)
+        tkinter.Button(frame, text="...", command=self.ability_chooser).grid(row=0, column=1)
+
+    # exit and export buttons
+    def export_exit_widgets(self, right_column):
+        export_exit_frame = tkinter.Frame(right_column, width=400, borderwidth=1, relief="ridge")
+        export_exit_frame.grid(row=2, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Button(export_exit_frame, text="Export", command=dumpHullJSON).grid(row=0, column=0)
+        tkinter.Button(export_exit_frame, text="Exit", command=exit).grid(row=0, column=1)
+
+    # left column items
+
+    # entry fields for different hull properties
+    def entry_widgets(self, column, param_name, entry_width, frame_row):
+        frame = tkinter.Frame(column, width=400, borderwidth=1, relief="ridge")
+        frame.grid(row=frame_row, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Label(frame, text=hull_json_descriptions[param_name]).grid(row=0, column=0)
+
+        self.entries[param_name] = tkinter.Entry(frame, width=entry_width)
+        self.entries[param_name].grid(row=0, column=1)
+
+    # entry fields for engine properties
+    def engine_widgets(self, column, entry_width, frame_row):
+        frame = tkinter.Frame(column, width=400, borderwidth=1, relief="ridge")
+        frame.grid(row=frame_row, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Label(frame, text=hull_json_descriptions["engine"]).grid(row=0, column=0)
+
+        self.engine_entry = tkinter.Entry(frame, width=entry_width)
+        self.engine_entry.grid(row=0, column=1)
+
+    # button for loading b2d json file
+    def load_b2d_file_widgets(self, left_column):
+        load_b2d_json_frame = tkinter.Frame(left_column, width=400, borderwidth=1, relief="ridge")
+        load_b2d_json_frame.grid(row=7, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        self.load_b2d_json_label = tkinter.Label(load_b2d_json_frame, text=b2d_json_label_text)
+        self.load_b2d_json_label.grid(row=0, column=0)
+
+        tkinter.Button(load_b2d_json_frame, text="Load b2d file", command=loadB2DFile).grid(row=0, column=1)
+
+    # button for loading hull json file for editing
+    def load_hull_json_widgets(self, left_column):
+        load_hull_json_frame = tkinter.Frame(left_column, width=400, borderwidth=1, relief="ridge")
+        load_hull_json_frame.grid(row=8, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Label(load_hull_json_frame, text="Open JSON for editing").grid(row=0, column=0)
+        tkinter.Button(load_hull_json_frame, text="Load Hull JSON", command=loadHullJSON).grid(row=0, column=1)
 
     def ability_chooser(self):
         self.temp_window = tkinter.Toplevel(self, width=400)
-        frame_one = tkinter.Frame(self.temp_window)
-        frame_one.pack(side="top", padx=5, pady=5)
-        tkinter.OptionMenu(frame_one, self.ability_type, "None", "sloMo",
-                           "teleport",
-                           "knockBack", "emWave", "unShield").pack(side="left")
-        tkinter.Button(frame_one, text="Select ability",
-                       command=self.ability_configurer).pack(side="right")
-        frame_two = tkinter.Frame(self.temp_window)
-        frame_two.pack(side="top", padx=5, pady=5)
-        tkinter.Label(frame_two, textvariable=self.ability_property_name).pack(
-            side="left")
-        tkinter.Entry(frame_two, width=4,
-                      textvariable=self.ability_property_value).pack()
-        frame_rechargetime = tkinter.Frame(self.temp_window)
-        frame_rechargetime.pack(side="top", padx=5, pady=5)
-        tkinter.Label(frame_rechargetime, text="Recharge time").pack(
-            side="left")
-        tkinter.Entry(frame_rechargetime, width=2,
-                      textvariable=self.ability_recharge_time).pack(
-            side="right")
-        tkinter.Button(self.temp_window, text="Save and Exit",
-                       command=self.ability_save_and_exit).pack(side="top")
+        frame_ability_chooser = tkinter.Frame(self.temp_window)
+        frame_ability_chooser.grid(row=0, column=0)
+        frame_one = tkinter.Frame(frame_ability_chooser, width=400, borderwidth=1, relief="ridge")
+        frame_one.grid(row=0, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.OptionMenu(frame_one, self.ability_type, "None", "sloMo", "teleport", "knockBack", "emWave", "unShield").grid(row=0, column=0, sticky=sticky_we, padx=1, pady=1)
+        tkinter.Button(frame_one, text="Select ability", command=self.ability_configurer).grid(row=0, column=1)
+
+        frame_two = tkinter.Frame(frame_ability_chooser, width=400, borderwidth=1, relief="ridge")
+        frame_two.grid(row=1, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Label(frame_two, textvariable=self.ability_property_name).grid(row=0, column=0)
+        tkinter.Entry(frame_two, width=4, textvariable=self.ability_property_value).grid(row=0, column=1)
+
+        frame_rechargetime = tkinter.Frame(frame_ability_chooser, width=400, borderwidth=1, relief="ridge")
+        frame_rechargetime.grid(row=2, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Label(frame_rechargetime, text="Recharge time").grid(row=0, column=0)
+        tkinter.Entry(frame_rechargetime, width=4, textvariable=self.ability_recharge_time).grid(row=0, column=1)
+
+        frame_exit_save = tkinter.Frame(frame_ability_chooser, width=400, borderwidth=1, relief="ridge")
+        frame_exit_save.grid(row=3, column=0, sticky=sticky_we, padx=1, pady=1)
+
+        tkinter.Button(frame_exit_save, text="Save and Exit", command=self.ability_save_and_exit).grid(row=3, column=0)
 
     def ability_configurer(self):
         if self.ability_type.get() == "teleport":
@@ -134,18 +191,7 @@ class Application(tkinter.Frame):
         elif self.ability_type.get() == "unShield":
             self.ability_property_name.set("amount")
         elif self.ability_type.get() == "None":
-            self.ability_property_name.set("")
-
-    def hasBase_widgets(self, right_column):
-        frame = tkinter.Frame(right_column,
-                              width=400,
-                              borderwidth=1,
-                              relief="ridge")
-        frame.pack(side="top", pady=2)
-        tkinter.Checkbutton(frame,
-                            text=hull_json_descriptions["hasBase"],
-                            variable=self.hasBase,
-                            ).pack(side="left", padx=5, pady=5)
+            self.ability_property_name.set("ability property")
 
     def ability_save_and_exit(self):
         if self.ability_type.get() != "None":
@@ -156,74 +202,10 @@ class Application(tkinter.Frame):
                 int(self.ability_recharge_time.get())
         self.temp_window.destroy()
 
-    def entry_widgets(self, column, param_name, entry_width):
-        frame = tkinter.Frame(column,
-                              width=400,
-                              borderwidth=1,
-                              relief="ridge")
-        frame.pack(side="top", pady=2)
-        tkinter.Label(frame, text=hull_json_descriptions[param_name]).pack(
-            side="left", padx=5, pady=5)
-        self.entries[param_name] = tkinter.Entry(frame,
-                                                 width=entry_width)
-        self.entries[param_name].pack(side=tkinter.RIGHT, padx=5, pady=5)
-
-    def engine_widgets(self, column, entry_width):
-        frame = tkinter.Frame(column,
-                              width=400,
-                              borderwidth=1,
-                              relief="ridge")
-        frame.pack(side="top", pady=2)
-        tkinter.Label(frame, text=hull_json_descriptions["engine"]).pack(
-            side="left", padx=5, pady=5)
-        self.engine_entry = tkinter.Entry(frame, width=entry_width)
-        self.engine_entry.pack(side=tkinter.RIGHT, padx=5, pady=5)
-
     def insert_default_values(self):
         for key in self.entries.keys():
             self.entries[key].delete(0)
             self.entries[key].insert(0, hull_json[key])
-
-    def export_exit_widgets(self, right_column):
-        export_exit_frame = tkinter.Frame(right_column,
-                                          width=400,
-                                          borderwidth=1,
-                                          relief="ridge")
-        export_exit_frame.pack(side="bottom", pady=2)
-        tkinter.Button(export_exit_frame,
-                       text="Export",
-                       command=dumpHullJSON).pack(side="left", padx=5, pady=5)
-        tkinter.Button(export_exit_frame,
-                       text="Exit",
-                       command=self.quit).pack(side="right", padx=5, pady=5)
-
-    def load_b2d_file_widgets(self, left_column):
-        load_b2d_json_frame = tkinter.Frame(left_column,
-                                            width=400,
-                                            borderwidth=1,
-                                            relief="ridge")
-        load_b2d_json_frame.pack(side="top", pady=2)
-        self.load_b2d_json_label = tkinter.Label(load_b2d_json_frame,
-                                                 text=b2d_json_label_text)
-        self.load_b2d_json_label.pack(side="left", padx=5, pady=5)
-        tkinter.Button(load_b2d_json_frame,
-                       text="Load b2d file",
-                       command=loadB2DFile).pack(side="right", padx=5, pady=5)
-
-    def load_hull_json_widgets(self, left_column):
-        load_hull_json_frame = tkinter.Frame(left_column,
-                                             width=400,
-                                             borderwidth=1,
-                                             relief="ridge")
-        load_hull_json_frame.pack(side="top", pady=2)
-        tkinter.Label(load_hull_json_frame,
-                      text="Open JSON to base this on").pack(side="left",
-                                                             padx=5,
-                                                             pady=5)
-        tkinter.Button(load_hull_json_frame,
-                       text="Load Hull JSON",
-                       command=loadHullJSON).pack(side="right", padx=5, pady=5)
-
 
 def loadHullJSON():
     global hull_json, default_hull_json
@@ -231,11 +213,15 @@ def loadHullJSON():
         filetypes=[("JSON files", ".json"), ("All Files", "*")],
         parent=app,
         initialdir="~")
+    global hull_json, export_file_name, default_hull_json
+    name = filedialog.askopenfilename(filetypes=[("JSON files", ".json"), ("All Files", "*")], parent=app, initialdir="~")
     # for whatever reason, filedialogs returns either () or "" on Cancel
     if name == () or name == "":
         return
     hull_json = {**default_hull_json, **json.load(open(name))}
     app.configure_ability_on_load()
+    if messagebox.askyesno("Use as output?", "Do you wish to set the selected file as file to ", "write the created JSON later into?"):
+        export_file_name = name
 
 
 def loadB2DFile():
