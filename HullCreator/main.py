@@ -5,28 +5,14 @@ from tkinter import messagebox
 
 sticky_we = tkinter.W+tkinter.E
 
-default_hull_json = {"size": 1.0, "maxLife": 10, "lightSrcPos": [],
-                     "hasBase": False, "forceBeaconPos": [], "doorPos": [],
-                     "type": "std", "engine": None, "ability": {},
-                     "displayName": "---", "price": 0, "hirePrice": 0,
-                     "gunSlots": [], "particleEmitters": []}
+with open("defaultHull.json") as file:
+    default_hull_json = json.load(file)
 
 hull_json = default_hull_json.copy()
-hull_json_descriptions = {"size": "How big do you want your ship to be (float)",
-                          "maxLife": "Total amount of health the ship has (int)",
-                          "lightSrcPos": "Positions of lights on the ship",
-                          "hasBase": "hasBase (???)",
-                          "forceBeaconPos": "Positions of beacons on the ship",
-                          "doorPos": "Positions of the doors",
-                          "type": "Hull type: one of `std`, `big`, `station`",
-                          "engine": "Fully qualified engine name, blank for "
-                                    "none (str)",
-                          "ability": "Select ability your ship will have",
-                          "displayName": "Name of the ship (str)",
-                          "price": "Price of the ship (int)",
-                          "hirePrice": "Price of the ship to hire (int)",
-                          "gunSlots": "Gun slots on the ship",
-                          "particleEmitters": "Particle Emitters on your ship"}
+with open("hullJsonDescription.json") as file:
+    hull_json_descriptions = json.load(file)
+with open("defaultParticleEmitter.json") as file:
+    defaultParticleEmitter = json.load(file)
 b2d_file = {}
 b2d_json_label_text = "Open b2d file to use for physics,\nnone is loaded now"
 
@@ -202,14 +188,7 @@ class Application(tkinter.Frame):
             return
         self.particleEmitters_entry_selected = self.listbox.index(tkinter.ACTIVE)
         while self.particleEmitters_entry_selected + 1 > len(hull_json["particleEmitters"]):
-            hull_json["particleEmitters"].append({"position": "0.5 0.5", "trigger": "engine", "angleOffset": "0.0", "hasLight": False,
-                                          "particle": {
-                                              "effectFile": "FILE",
-                                              "size": "0",
-                                              "tex": "TEXTURE",
-                                              "floatsUp": False,
-                                              "tint": "TINT"
-                                          }})
+            hull_json["particleEmitters"].append(defaultParticleEmitter)
         item = hull_json["particleEmitters"][self.particleEmitters_entry_selected]
         self.tempPosString.set(item["position"])
         self.particleEmitter_trigger.set(item["trigger"])

@@ -1,0 +1,17 @@
+{
+  "size": "How big do you want your ship to be (float)",
+  "maxLife": "Total amount of health the ship has (int)",
+  "lightSrcPos": "Positions of lights on the ship",
+  "hasBase": "hasBase (???)",
+  "forceBeaconPos": "Positions of beacons on the ship",
+  "doorPos": "Positions of the doors",
+  "type": "Hull type: one of `std`, `big`, `station`",
+  "engine": "Fully qualified engine name, blank for "
+  "none (str)",
+  "ability": "Select ability your ship will have",
+  "displayName": "Name of the ship (str)",
+  "price": "Price of the ship (int)",
+  "hirePrice": "Price of the ship to hire (int)",
+  "gunSlots": "Gun slots on the ship",
+  "particleEmitters": "Particle Emitters on your ship"
+}

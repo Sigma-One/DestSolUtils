@@ -1,0 +1,13 @@
+{
+  "position": "0.5 0.5",
+  "trigger": "engine",
+  "angleOffset": "0.0",
+  "hasLight": false,
+  "particle": {
+    "effectFile": "FILE",
+    "size": "0",
+    "tex": "TEXTURE",
+    "floatsUp": false,
+    "tint": "TINT"
+  }
+}

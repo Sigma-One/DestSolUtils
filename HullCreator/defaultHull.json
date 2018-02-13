@@ -1,0 +1,16 @@
+{
+  "size": 1.0,
+  "maxLife": 10,
+  "lightSrcPos": [],
+  "hasBase": false,
+  "forceBeaconPos": [],
+  "doorPos": [],
+  "type": "std",
+  "engine": null,
+  "ability": {},
+  "displayName": "---",
+  "price": 0,
+  "hirePrice": 0,
+  "gunSlots": [],
+  "particleEmitters": []
+}
