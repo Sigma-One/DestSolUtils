@@ -10,6 +10,7 @@ default_hull_json = {"size": 1.0, "maxLife": 10, "lightSrcPos": [],
                      "type": "std", "engine": None, "ability": {},
                      "displayName": "---", "price": 0, "hirePrice": 0,
                      "gunSlots": [], "particleEmitters": []}
+
 hull_json = default_hull_json.copy()
 hull_json_descriptions = {"size": "How big do you want your ship to be (float)",
                           "maxLife": "Total amount of health the ship has (int)",
@@ -25,7 +26,7 @@ hull_json_descriptions = {"size": "How big do you want your ship to be (float)",
                           "price": "Price of the ship (int)",
                           "hirePrice": "Price of the ship to hire (int)",
                           "gunSlots": "Gun slots on the ship",
-                          "particleEmitters": "ParticleEmitters on your ship"}
+                          "particleEmitters": "Particle Emitters on your ship"}
 b2d_file = {}
 b2d_json_label_text = "Open b2d file to use for physics,\nnone is loaded now"
 
@@ -50,6 +51,7 @@ class Application(tkinter.Frame):
         self.gunSlots_isUnderneathHull = tkinter.BooleanVar()
         self.gunSlots_allowsRotation = tkinter.BooleanVar()
         self.gunSlots_entry_selected = 0
+        self.ability_property_name.set("property")
         self.particleEmitter_angleOffset = tkinter.StringVar()
         self.particleEmitter_effectFile = tkinter.StringVar()
         self.particleEmitter_size = tkinter.StringVar()
@@ -69,19 +71,17 @@ class Application(tkinter.Frame):
             self.ability_type.set("None")
 
     def create_widgets(self):
-        left_column = tkinter.Frame(self, width=400, height=600)
+        # create columns
+        left_column = tkinter.Frame(self, width=400, height=360)
         left_column.grid(row=0, column=0, sticky=tkinter.N)
-        right_column = tkinter.Frame(self, width=400, height=600)
+        right_column = tkinter.Frame(self, width=400, height=360)
         right_column.grid(row=0, column=1, sticky=tkinter.N)
 
-        # Load pre-created JSON
-        self.load_hull_json_widgets(left_column)
+        # Create menubar
+        self.menubar_widgets()
 
         # Load box2d file
         self.load_b2d_file_widgets(left_column)
-
-        # Export/Exit buttons
-        self.export_exit_widgets(right_column)
 
         # Int/Float/String fields
         self.entry_widgets(left_column, "size", 4, 0)
@@ -107,11 +107,13 @@ class Application(tkinter.Frame):
         self.posarrays_widgets(right_column, "doorPos", 5)
 
         self.gunSlots_widgets(right_column)
+
         self.particleEmitters_widgets(right_column)
+
 
     # right column items
 
-    # particleEmitters
+    # particle emitters
     def particleEmitters_widgets(self, column):
         frame = tkinter.Frame(column, width=400, borderwidth=1, relief="ridge")
         frame.grid(row=7, column=0, sticky=sticky_we, padx=1, pady=1)
@@ -231,7 +233,6 @@ class Application(tkinter.Frame):
         tkinter.Label(frame, text=hull_json_descriptions["gunSlots"]).grid(row=0, column=0)
         tkinter.Button(frame, text="...", command=self.gunSlots_window).grid(row=0, column=1)
 
-
     def gunSlots_window(self):
         if self.temp_window is not None:
             return
@@ -295,14 +296,6 @@ class Application(tkinter.Frame):
         tkinter.Label(frame, text=hull_json_descriptions["ability"]).grid(row=0, column=0)
         tkinter.Button(frame, text="...", command=self.ability_chooser).grid(row=0, column=1)
 
-    # exit and export buttons
-    def export_exit_widgets(self, right_column):
-        export_exit_frame = tkinter.Frame(right_column, width=400, borderwidth=1, relief="ridge")
-        export_exit_frame.grid(row=2, column=0, sticky=sticky_we, padx=1, pady=1)
-
-        tkinter.Button(export_exit_frame, text="Export", command=dumpHullJSON).grid(row=0, column=0)
-        tkinter.Button(export_exit_frame, text="Exit", command=exit).grid(row=0, column=1)
-
     # left column items
 
     # entry fields for different hull properties
@@ -335,14 +328,23 @@ class Application(tkinter.Frame):
 
         tkinter.Button(load_b2d_json_frame, text="Load b2d file", command=loadB2DFile).grid(row=0, column=1)
 
-    # button for loading hull json file for editing
-    def load_hull_json_widgets(self, left_column):
-        load_hull_json_frame = tkinter.Frame(left_column, width=400, borderwidth=1, relief="ridge")
-        load_hull_json_frame.grid(row=8, column=0, sticky=sticky_we, padx=1, pady=1)
+    # other widgets
 
-        tkinter.Label(load_hull_json_frame, text="Open JSON for editing").grid(row=0, column=0)
-        tkinter.Button(load_hull_json_frame, text="Load Hull JSON", command=loadHullJSON).grid(row=0, column=1)
+    # menubar
+    def menubar_widgets(self):
+        menubar = tkinter.Menu()
+        self.master.config(menu=menubar)
 
+        file_menu = tkinter.Menu(menubar)
+
+        menubar.add_cascade(label="File", menu=file_menu)
+
+        file_menu.add_command(label="Import Hull", command=loadHullJSON)
+        file_menu.add_command(label="Export Hull", command=dumpHullJSON)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=exit)
+
+    # ability chooser dialog
     def ability_chooser(self):
         if self.temp_window is not None:
             return
@@ -374,13 +376,14 @@ class Application(tkinter.Frame):
 
         tkinter.Button(frame_exit_save, text="Save and Exit", command=self.ability_save_and_exit).grid(row=3, column=0)
 
+    # configuring ability specific values
     def ability_configurer(self):
         self.ability_property_name.set({"teleport": "angle",
                                         "sloMo": "factor",
                                         "knockBack": "force",
                                         "emWave": "duration",
                                         "unShield": "amount",
-                                        "None": "ability property"}[self.ability_type.get()])
+                                        "None": "property"}[self.ability_type.get()])
 
     def ability_save_and_exit(self):
         if self.ability_type.get() != "None":
@@ -398,13 +401,10 @@ class Application(tkinter.Frame):
             self.entries[key].insert(0, hull_json[key])
 
     def posarrays_widgets(self, column, param_name, row):
-        frame = tkinter.Frame(column, width=400, borderwidth=1,
-                              relief=tkinter.RIDGE)
+        frame = tkinter.Frame(column, width=400, borderwidth=1, relief=tkinter.RIDGE)
         frame.grid(row=row, column=0, sticky=sticky_we, padx=1, pady=1)
-        tkinter.Label(frame, text=hull_json_descriptions[param_name]).grid(
-            row=0, column=0)
-        tkinter.Button(frame, command=lambda: self.posarrays_window(param_name),
-                       text="...").grid(row=0, column=1)
+        tkinter.Label(frame, text=hull_json_descriptions[param_name]).grid(row=0, column=0)
+        tkinter.Button(frame, command=lambda: self.posarrays_window(param_name), text="...").grid(row=0, column=1)
 
     def posarrays_window(self, name):
         if self.temp_window is not None:
@@ -446,10 +446,7 @@ class Application(tkinter.Frame):
 
 def loadHullJSON():
     global hull_json, default_hull_json
-    name = filedialog.askopenfilename(
-        filetypes=[("JSON files", ".json"), ("All Files", "*")],
-        parent=app,
-        initialdir="~")
+    name = filedialog.askopenfilename(filetypes=[("JSON files", ".json"), ("All Files", "*")], parent=app, initialdir="~")
     # for whatever reason, filedialogs returns either () or "" on Cancel
     if name == () or name == "":
         return
@@ -459,24 +456,20 @@ def loadHullJSON():
 
 def loadB2DFile():
     global b2d_file
-    name = filedialog.askopenfilename(
-        filetypes=[("All Files", "*")],
-        parent=app,
-        initialdir="~")
+    name = filedialog.askopenfilename(filetypes=[("All Files", "*")], parent=app, initialdir="~")
     # for whatever reason, filedialogs returns either () or "" on Cancel
     if name == () or name == "":
-        app.load_b2d_json_label[
-            "text"] = "Open b2d file to use for physics,\nnone is loaded now"
+        app.load_b2d_json_label["text"] = "Open b2d file to use for physics,\nnone is loaded now"
         b2d_file = {}
         return
     b2d_file_temp = json.load(open(name))
-    if ("rigidBodies" in b2d_file_temp and
-            type(b2d_file_temp["rigidBodies"]) is list):
+    if ("rigidBodies" in b2d_file_temp and type(b2d_file_temp["rigidBodies"]) is list):
         b2d_file["rigidBody"] = b2d_file_temp["rigidBodies"][0]
+
         del b2d_file["rigidBody"]["imagePath"]
         del b2d_file["rigidBody"]["name"]
-        app.load_b2d_json_label[
-            "text"] = "Open b2d file to use for physics,\none is already loaded"
+
+        app.load_b2d_json_label["text"] = "Open b2d file to use for physics,\none is already loaded"
     else:
         messagebox.showwarning(
             message="The file you have chosen is not valid b2d file.")
@@ -485,12 +478,7 @@ def loadB2DFile():
 def dumpHullJSON():
     global hull_json, b2d_file
     # for whatever reason, filedialogs returns either () or "" on Cancel
-    export_file_name = filedialog.asksaveasfilename(
-        defaultextension=".json",
-        filetypes=[("JSON files", "*.json")],
-        initialdir="~",
-        parent=app
-    )
+    export_file_name = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")], initialdir="~", parent=app)
     if export_file_name == "" or export_file_name == ():
         return
     app_entries = {k: v.get() for k, v in app.entries.items()}
@@ -511,14 +499,11 @@ def dumpHullJSON():
             print("hi")
             return
     with open(export_file_name, "w") as export_file:
-        json.dump(hull_json,
-                  export_file,
-                  indent=2,
-                  sort_keys=True)
+        json.dump(hull_json, export_file, indent=2, sort_keys=True)
 
 
 app = Application()
 app.master.title("DestinationSol Hull Creator")
-app.master.minsize(800, 600)
+app.master.minsize(800, 360)
 app.master.resizable(False, False)
 app.mainloop()
