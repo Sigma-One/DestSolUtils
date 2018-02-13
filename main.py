@@ -13,10 +13,10 @@ default_hull_json = {"size": 1.0, "maxLife": 10, "lightSrcPos": [],
 hull_json = default_hull_json.copy()
 hull_json_descriptions = {"size": "How big do you want your ship to be (float)",
                           "maxLife": "Total amount of health the ship has (int)",
-                          "lightSrcPos": "",
+                          "lightSrcPos": "Positions of lights on the ship",
                           "hasBase": "hasBase (???)",
-                          "forceBeaconPos": "",
-                          "doorPos": "",
+                          "forceBeaconPos": "Positions of beacons on the ship",
+                          "doorPos": "Positions of the doors",
                           "type": "Hull type: one of `std`, `big`, `station`",
                           "engine": "Fully qualified engine name, blank for "
                                     "none (str)",
@@ -24,7 +24,7 @@ hull_json_descriptions = {"size": "How big do you want your ship to be (float)",
                           "displayName": "Name of the ship (str)",
                           "price": "Price of the ship (int)",
                           "hirePrice": "Price of the ship to hire (int)",
-                          "gunSlots": "",
+                          "gunSlots": "Gun slots on the ship",
                           "particleEmitters": ""}
 b2d_file = {}
 b2d_json_label_text = "Open b2d file to use for physics,\nnone is loaded now"
@@ -34,6 +34,7 @@ class Application(tkinter.Frame):
     def __init__(self, master=None):
         super(Application, self).__init__(master)
 
+        self.temp_window = None
         self.hasBase = tkinter.IntVar()
         self.pack(anchor="n")
         self.entries = {}
@@ -44,6 +45,11 @@ class Application(tkinter.Frame):
         self.ability_property_value = tkinter.StringVar()
         self.ability_recharge_time = tkinter.StringVar()
         self.configure_ability_on_load()
+        self.tempPosString = tkinter.StringVar()
+        self.posarrays_name = ""
+        self.gunSlots_isUnderneathHull = tkinter.BooleanVar()
+        self.gunSlots_allowsRotation = tkinter.BooleanVar()
+        self.gunSlots_entry_selected = 0
 
     def configure_ability_on_load(self):
         if "type" in hull_json["ability"]:
@@ -87,7 +93,69 @@ class Application(tkinter.Frame):
         # ability
         self.ability_widgets(right_column)
 
+        # arrays od position strings
+        self.posarrays_widgets(right_column, "lightSrcPos", 3)
+        self.posarrays_widgets(right_column, "forceBeaconPos", 4)
+        self.posarrays_widgets(right_column, "doorPos", 5)
+
+        self.gunSlots_widgets(right_column)
+
     # right column items
+
+    # gunSlots
+    def gunSlots_widgets(self, column):
+        frame = tkinter.Frame(column, width=400, borderwidth=1, relief="ridge")
+        frame.grid(row=6, column=0, sticky=sticky_we, padx=1, pady=1)
+        tkinter.Label(frame, text=hull_json_descriptions["gunSlots"]).grid(row=0, column=0)
+        tkinter.Button(frame, text="...", command=self.gunSlots_window).grid(row=0, column=1)
+
+    def gunSlots_window(self):
+        if self.temp_window is not None:
+            return
+        self.temp_window = tkinter.Toplevel(self, width=400)
+        self.temp_window.protocol('WM_DELETE_WINDOW', self.gunSlots_window_exit)
+        self.temp_window.attributes('-topmost', 'true')
+        frame_top = tkinter.Frame(self.temp_window)
+        frame_top.grid(row=0, column=0, pady=5)
+        frame_bottom = tkinter.Frame(self.temp_window)
+        frame_bottom.grid(row=1, column=0, pady=5)
+        self.listbox = tkinter.Listbox(frame_top)
+        self.listbox.grid(row=0, column=0, padx=5)
+        frame_top_right = tkinter.Frame(frame_top)
+        frame_top_right.grid(row=0, column=1, padx=5)
+        tkinter.Entry(frame_top_right, width=10, textvariable=self.tempPosString).grid(row=0, column=0, columnspan=2, pady=3)
+        tkinter.Checkbutton(frame_top_right, text="isUnderneathHull", variable=self.gunSlots_isUnderneathHull).grid(row=1, column=0, columnspan=2, pady=3)
+        tkinter.Checkbutton(frame_top_right, text="allowsRotation", variable=self.gunSlots_allowsRotation).grid(row=2, column=0, columnspan=2, pady=3)
+        tkinter.Button(frame_top_right, command=self.gunSlots_save, text="Save").grid(row=3, column=0, padx=3)
+        tkinter.Button(frame_top_right, command=self.gunSlots_load, text="Select").grid(row=3, column=1)
+        tkinter.Button(frame_bottom, command=lambda: self.listbox.insert(tkinter.END, "0.5 0.5"), text="Add").grid(row=0, column=0)
+        tkinter.Button(frame_bottom, command=lambda: self.listbox.delete(tkinter.ACTIVE), text="Remove").grid(row=0, column=1)
+        tkinter.Button(frame_bottom, command=self.gunSlots_window_exit, text="Exit").grid(row=0, column=2)
+
+    def gunSlots_save(self):
+        if self.listbox.size() == 0:
+            return
+        hull_json["gunSlots"][self.gunSlots_entry_selected]["isUnderneathHull"] = self.gunSlots_isUnderneathHull.get()
+        hull_json["gunSlots"][self.gunSlots_entry_selected]["allowsRotation"] = self.gunSlots_allowsRotation.get()
+        hull_json["gunSlots"][self.gunSlots_entry_selected]["position"] = self.tempPosString.get()
+        self.listbox.delete(self.gunSlots_entry_selected)
+        self.listbox.insert(self.gunSlots_entry_selected, self.tempPosString.get())
+
+    def gunSlots_load(self):
+        if self.listbox.size() == 0:
+            return
+        self.gunSlots_entry_selected = self.listbox.index(tkinter.ACTIVE)
+        while self.gunSlots_entry_selected + 1 > len(hull_json["gunSlots"]):
+            hull_json["gunSlots"].append({"position": "0.5 0.5", "isUnderneathHull": False, "allowsRotation": True})
+        item = hull_json["gunSlots"][self.gunSlots_entry_selected]
+        self.gunSlots_isUnderneathHull.set(item["isUnderneathHull"])
+        self.gunSlots_allowsRotation.set(item["allowsRotation"])
+        self.tempPosString.set(item["position"])
+
+    def gunSlots_window_exit(self):
+        self.listbox.destroy()
+        self.temp_window.destroy()
+        self.temp_window = None
 
     # hasBase(?) checkbox
     def hasBase_widgets(self, right_column):
@@ -153,7 +221,11 @@ class Application(tkinter.Frame):
         tkinter.Button(load_hull_json_frame, text="Load Hull JSON", command=loadHullJSON).grid(row=0, column=1)
 
     def ability_chooser(self):
+        if self.temp_window is not None:
+            return
         self.temp_window = tkinter.Toplevel(self, width=400)
+        self.temp_window.protocol('WM_DELETE_WINDOW', self.ability_save_and_exit)
+        self.temp_window.attributes('-topmost', 'true')
         frame_ability_chooser = tkinter.Frame(self.temp_window)
         frame_ability_chooser.grid(row=0, column=0)
         frame_one = tkinter.Frame(frame_ability_chooser, width=400, borderwidth=1, relief="ridge")
@@ -180,18 +252,12 @@ class Application(tkinter.Frame):
         tkinter.Button(frame_exit_save, text="Save and Exit", command=self.ability_save_and_exit).grid(row=3, column=0)
 
     def ability_configurer(self):
-        if self.ability_type.get() == "teleport":
-            self.ability_property_name.set("angle")
-        elif self.ability_type.get() == "sloMo":
-            self.ability_property_name.set("factor")
-        elif self.ability_type.get() == "knockBack":
-            self.ability_property_name.set("force")
-        elif self.ability_type.get() == "emWave":
-            self.ability_property_name.set("duration")
-        elif self.ability_type.get() == "unShield":
-            self.ability_property_name.set("amount")
-        elif self.ability_type.get() == "None":
-            self.ability_property_name.set("ability property")
+        self.ability_property_name.set({"teleport": "angle",
+                                        "sloMo": "factor",
+                                        "knockBack": "force",
+                                        "emWave": "duration",
+                                        "unShield": "amount",
+                                        "None": "ability property"}[self.ability_type.get()])
 
     def ability_save_and_exit(self):
         if self.ability_type.get() != "None":
@@ -201,11 +267,59 @@ class Application(tkinter.Frame):
             hull_json["ability"]["rechargeTime"] = \
                 int(self.ability_recharge_time.get())
         self.temp_window.destroy()
+        self.temp_window = None
 
     def insert_default_values(self):
         for key in self.entries.keys():
             self.entries[key].delete(0)
             self.entries[key].insert(0, hull_json[key])
+
+    def posarrays_widgets(self, column, param_name, row):
+        frame = tkinter.Frame(column, width=400, borderwidth=1,
+                              relief=tkinter.RIDGE)
+        frame.grid(row=row, column=0, sticky=sticky_we, padx=1, pady=1)
+        tkinter.Label(frame, text=hull_json_descriptions[param_name]).grid(
+            row=0, column=0)
+        tkinter.Button(frame, command=lambda: self.posarrays_window(param_name),
+                       text="...").grid(row=0, column=1)
+
+    def posarrays_window(self, name):
+        if self.temp_window is not None:
+            return
+        self.posarrays_name = name
+        self.temp_window = tkinter.Toplevel(self, width=400)
+        self.temp_window.protocol('WM_DELETE_WINDOW', self.posarrays_window_save_and_exit)
+        self.temp_window.attributes('-topmost', 'true')
+        frame_top = tkinter.Frame(self.temp_window)
+        frame_top.grid(row=0, column=0, pady=5)
+        frame_bottom = tkinter.Frame(self.temp_window)
+        frame_bottom.grid(row=1, column=0, pady=5)
+        self.listbox = tkinter.Listbox(frame_top)
+        self.listbox.grid(row=0, column=0, padx=5)
+        frame_top_right = tkinter.Frame(frame_top)
+        frame_top_right.grid(row=0, column=1, padx=5)
+        tkinter.Entry(frame_top_right, width=10, textvariable=self.tempPosString).grid(row=0, column=0, columnspan=2, pady=5)
+        tkinter.Button(frame_top_right, command=self.posarrays_window_entrytolistbox, text="Save").grid(row=1, column=0, padx=3)
+        tkinter.Button(frame_top_right, command=self.posarrays_window_listboxtoentry, text="Select").grid(row=1, column=1)
+        tkinter.Button(frame_bottom, command=lambda: self.listbox.insert(tkinter.END, "0.5 0.5"), text="Add").grid(row=0, column=0)
+        tkinter.Button(frame_bottom, command=lambda: self.listbox.delete(tkinter.ACTIVE), text="Remove").grid(row=0, column=1)
+        tkinter.Button(frame_bottom, command=self.posarrays_window_save_and_exit, text="Exit").grid(row=0, column=2)
+
+    def posarrays_window_entrytolistbox(self):
+        index = self.listbox.index(tkinter.ACTIVE)
+        self.listbox.insert(index, self.tempPosString.get())
+        self.listbox.delete(index + 1)
+        self.listbox.selection_set(index)
+
+    def posarrays_window_listboxtoentry(self):
+        self.tempPosString.set(self.listbox.get(tkinter.ACTIVE))
+
+    def posarrays_window_save_and_exit(self):
+        hull_json[self.posarrays_name] = self.listbox.get(0, tkinter.END)
+        self.listbox.destroy()
+        self.temp_window.destroy()
+        self.temp_window = None
+
 
 def loadHullJSON():
     global hull_json, default_hull_json
@@ -213,15 +327,11 @@ def loadHullJSON():
         filetypes=[("JSON files", ".json"), ("All Files", "*")],
         parent=app,
         initialdir="~")
-    global hull_json, export_file_name, default_hull_json
-    name = filedialog.askopenfilename(filetypes=[("JSON files", ".json"), ("All Files", "*")], parent=app, initialdir="~")
     # for whatever reason, filedialogs returns either () or "" on Cancel
     if name == () or name == "":
         return
     hull_json = {**default_hull_json, **json.load(open(name))}
     app.configure_ability_on_load()
-    if messagebox.askyesno("Use as output?", "Do you wish to set the selected file as file to ", "write the created JSON later into?"):
-        export_file_name = name
 
 
 def loadB2DFile():
