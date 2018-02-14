@@ -5,13 +5,13 @@ from tkinter import messagebox
 
 sticky_we = tkinter.W+tkinter.E
 
-with open("defaultHull.json") as file:
+with open("HullCreator/defaultHull.json") as file:
     default_hull_json = json.load(file)
 
 hull_json = default_hull_json.copy()
-with open("hullJsonDescription.json") as file:
+with open("HullCreator/hullJsonDescriptions.json") as file:
     hull_json_descriptions = json.load(file)
-with open("defaultParticleEmitter.json") as file:
+with open("HullCreator/defaultParticleEmitter.json") as file:
     defaultParticleEmitter = json.load(file)
 b2d_file = {}
 b2d_json_label_text = "Open b2d file to use for physics,\nnone is loaded now"

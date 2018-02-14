@@ -6,8 +6,7 @@
   "forceBeaconPos": "Positions of beacons on the ship",
   "doorPos": "Positions of the doors",
   "type": "Hull type: one of `std`, `big`, `station`",
-  "engine": "Fully qualified engine name, blank for "
-  "none (str)",
+  "engine": "Fully qualified engine name, blank for none (str)",
   "ability": "Select ability your ship will have",
   "displayName": "Name of the ship (str)",
   "price": "Price of the ship (int)",
