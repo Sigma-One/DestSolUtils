@@ -1,0 +1,13 @@
+{
+    "maxLife": "Maximum shield HP (int)",
+    "idleTime": "Idle time until recharge (float)",
+    "regenSpd": "Recharge speed (float)",
+    "bulletDmgFactor": "Bullet dmage reduction (float)",
+    "energyDmgFactor": "Energy damage reduction (float)",
+    "explosionDmgFactor": "Explosion damage reduction (float)",
+    "price": "Item price (int)",
+    "displayName": "In-Game Name (string)",
+    "absorbSound": "Damage absorption sound (string)",
+    "absorbSoundPitch": "Absorb sound pitch (float)",
+    "regenSound": "Regeneration sound (string)"
+}

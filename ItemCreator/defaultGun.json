@@ -1,0 +1,14 @@
+{
+  "maxAngleVar": 0,
+  "angleVarDamp": 0,
+  "angleVarPerShot": 0,
+  "timeBetweenShots": 0,
+  "reloadTime": 0,
+  "price": 0,
+  "clipName": "---",
+  "gunLength": 0,
+  "displayName": "---",
+  "lightOnShot": true,
+  "shootSounds": [],
+  "reloadSounds": []
+}

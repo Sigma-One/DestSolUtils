@@ -1,0 +1,14 @@
+{
+  "maxAngleVar": "Maximum shot angle variation (float)",
+  "angleVarDamp": "Angle variation damping (float)",
+  "angleVarPerShot": "Angle variation per shot (float)",
+  "timeBetweenShots": "Fire rate (float)",
+  "reloadTime": "Reloading time (float)",
+  "price": "Item price (int)",
+  "clipName": "Valid clip name (string)",
+  "gunLength": "Gun barrel length (float)",
+  "displayName": "Name visible in-game (string)",
+  "lightOnShot": "Show a muzzle flash",
+  "shootSounds": "Firing sounds (string array)",
+  "reloadSounds": "Reloading sounds (string array)"
+}

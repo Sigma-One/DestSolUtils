@@ -1,0 +1,13 @@
+{
+    "maxLife": 0,
+    "idleTime": 0.0,
+    "regenSpd": 0.0,
+    "bulletDmgFactor": 0.0,
+    "energyDmgFactor": 0.0,
+    "explosionDmgFactor": 0.0,
+    "price": 0,
+    "displayName": "---",
+    "absorbSound": "---",
+    "absorbSoundPitch": 0.0,
+    "regenSound": "---"
+}
