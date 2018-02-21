@@ -11,13 +11,15 @@ sticky_we = tkinter.W+tkinter.E
 item_json_descriptions = None
 item_json = None
 
+left_column = None
+right_column = None
+
 #item_type = None
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         super(Application, self).__init__(master)
         self.item_type = None
-
         self.temp_window = None
         self.entries = {}
         self.checkboxes = {}
@@ -28,6 +30,8 @@ class Application(tkinter.Frame):
 
     def create_widgets(self):
 
+        global left_column
+        global right_column
         global item_json_descriptions
         global item_json
 
@@ -37,7 +41,7 @@ class Application(tkinter.Frame):
         right_column = tkinter.Frame(self, width=400, height=360)
         right_column.grid(row=0, column=1, sticky=tkinter.N)
 
-        print(self.item_type)
+        print("Type Set: ", self.item_type)
 
         # Create menubar
         self.menubar_widgets()
@@ -85,26 +89,63 @@ class Application(tkinter.Frame):
             self.entry_widgets(right_column, "absorbSound", 10, 8)
             self.entry_widgets(right_column, "absorbSoundPitch", 3, 8)
 
+        elif self.item_type == "armor":
+
+            with open("ItemCreator/armorJsonDescriptions.json") as file:
+                item_json_descriptions = json.load(file)
+
+            with open("ItemCreator/defaultArmor.json") as file:
+                item_json = json.load(file)
+
+            self.entry_widgets(left_column, "price", 3, 0)
+            self.entry_widgets(left_column, "perc", 3, 1)
+            self.entry_widgets(left_column, "displayName", 10, 2)
+
+            self.array_widgets(right_column, "bulletHitSounds", 0)
+            self.array_widgets(right_column, "energyHitSounds", 1)
+            self.entry_widgets(left_column, "baseSoundPitch", 3, 2)
+
+        elif self.item_type == "clip":
+
+            with open("ItemCreator/clipJsonDescriptions.json") as file:
+                item_json_descriptions = json.load(file)
+
+            with open("ItemCreator/defaultClip.json") as file:
+                item_json = json.load(file)
+
+            self.entry_widgets(left_column, "price", 3, 0)
+            self.entry_widgets(left_column, "displayName", 10, 1)
+            self.entry_widgets(left_column, "plural", 10, 2)
+            self.entry_widgets(left_column, "iconName", 10, 3)
+
+            self.entry_widgets(right_column, "size", 3, 0)
+            self.checkbox_widgets(right_column, "infinite", 1)
 
         else:
-            print("hermagerd you chose wrongly")
+            print("How did you even choose an invalid type?")
 
 
         # Default values for entry fields
         self.insert_default_values()
 
     def choose_type(self):
+        try:
+            right_column.destroy()
+            left_column.destroy()
+        except AttributeError:
+            print("No column(s)")
         frame = tkinter.Frame(self)
         frame.grid()
+
         def choose(chosen_type):
-            print("wasdasd")
             self.item_type = chosen_type
             frame.destroy()
             self.create_widgets()
 
-        tkinter.Button(frame, command=lambda: choose("shield"), text="shield").grid(row=0)
-        tkinter.Button(frame, command=lambda: choose("gun"), text="gun").grid(row=1)
-
+        tkinter.Button(frame, command=lambda: choose("shield"), text="Shield").grid(row=0, sticky=sticky_we)
+        tkinter.Button(frame, command=lambda: choose("gun"), text="Gun").grid(row=1, sticky=sticky_we)
+        tkinter.Button(frame, command=lambda: choose("armor"), text="Armor").grid(row=2, sticky=sticky_we)
+        tkinter.Button(frame, command=lambda: choose("clip"), text="Clip").grid(row=3, sticky=sticky_we)
 
     # right column items
 
@@ -147,13 +188,17 @@ class Application(tkinter.Frame):
         self.master.config(menu=menubar)
 
         file_menu = tkinter.Menu(menubar)
+        edit_menu = tkinter.Menu(menubar)
 
         menubar.add_cascade(label="File", menu=file_menu)
+        menubar.add_cascade(label="Edit", menu=edit_menu)
 
         file_menu.add_command(label="Import Item", command=loadItemJSON)
         file_menu.add_command(label="Export Item", command=dumpItemJSON)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=exit)
+
+        edit_menu.add_command(label="Change Type | WARNING: Clears all fields!", command=self.choose_type)
 
     # array maker
     def array_builder(self, field_name):

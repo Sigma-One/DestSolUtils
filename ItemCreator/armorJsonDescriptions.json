@@ -1,0 +1,8 @@
+{
+    "price": "Item price (int)",
+    "perc": "Percentage of damage blocked (float)",
+    "displayName": "In-game name (string)",
+    "bulletHitSounds": "Bullet hit sounds (string array)",
+    "energyHitSounds": "Energy hit sounds (string array)",
+    "baseSoundPitch": "Hit sound pitch (float)"
+}

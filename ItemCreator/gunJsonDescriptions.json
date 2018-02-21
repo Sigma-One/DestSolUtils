@@ -8,7 +8,7 @@
   "clipName": "Valid clip name (string)",
   "gunLength": "Gun barrel length (float)",
   "displayName": "Name visible in-game (string)",
-  "lightOnShot": "Show a muzzle flash",
+  "lightOnShot": "Show a muzzle flash (bool)",
   "shootSounds": "Firing sounds (string array)",
   "reloadSounds": "Reloading sounds (string array)"
 }

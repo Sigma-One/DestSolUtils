@@ -1,0 +1,9 @@
+{
+    "projectile": "Projectile entity (string)",
+    "infinite": "Infinite ammo (bool)",
+    "size": "Amount of shots per clip (int)",
+    "price": "Item price (int)",
+    "displayName": "In-game name (string)",
+    "plural": "Plural form of clip projectile (string)",
+    "iconName": "Name of the icon (use item json name) (string)"
+}
