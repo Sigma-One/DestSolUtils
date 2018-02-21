@@ -1,9 +1,6 @@
 import json
 import tkinter
-from tkinter import ttk
 from tkinter import filedialog
-from tkinter import messagebox
-import threading
 
 sticky_we = tkinter.W+tkinter.E
 
@@ -13,6 +10,24 @@ item_json = None
 
 left_column = None
 right_column = None
+
+with open("ItemCreator/gunJsonDescriptions.json") as file:
+    gun_json_descriptions = json.load(file)
+with open("ItemCreator/clipJsonDescriptions.json") as file:
+    clip_json_descriptions = json.load(file)
+with open("ItemCreator/armorJsonDescriptions.json") as file:
+    armor_json_descriptions = json.load(file)
+with open("ItemCreator/shieldJsonDescriptions.json") as file:
+    shield_json_descriptions = json.load(file)
+
+with open("ItemCreator/defaultGun.json") as file:
+    gun_json = json.load(file)
+with open("ItemCreator/defaultClip.json") as file:
+    clip_json = json.load(file)
+with open("ItemCreator/defaultArmor.json") as file:
+    armor_json = json.load(file)
+with open("ItemCreator/defaultShield.json") as file:
+    shield_json = json.load(file)
 
 #item_type = None
 
@@ -25,10 +40,16 @@ class Application(tkinter.Frame):
         self.checkboxes = {}
         self.pack(anchor="n")
 
+        # Create menubar
+        self.menubar_widgets()
+
         self.choose_type()
         #self.create_widgets()
 
     def create_widgets(self):
+
+        self.entries = {}
+        self.frame.destroy()
 
         global left_column
         global right_column
@@ -43,18 +64,11 @@ class Application(tkinter.Frame):
 
         print("Type Set: ", self.item_type)
 
-        # Create menubar
-        self.menubar_widgets()
-
         # Int/Float/String fields
 
         if self.item_type == "gun":
 
-            with open("ItemCreator/gunJsonDescriptions.json") as file:
-                item_json_descriptions = json.load(file)
-
-            with open("ItemCreator/defaultGun.json") as file:
-                item_json = json.load(file)
+            item_json_descriptions = gun_json_descriptions
 
             self.entry_widgets(left_column, "maxAngleVar", 4, 0)
             self.entry_widgets(left_column, "angleVarDamp", 3, 1)
@@ -72,11 +86,7 @@ class Application(tkinter.Frame):
 
         elif self.item_type == "shield":
 
-            with open("ItemCreator/shieldJsonDescriptions.json") as file:
-                item_json_descriptions = json.load(file)
-
-            with open("ItemCreator/defaultShield.json") as file:
-                item_json = json.load(file)
+            item_json_descriptions = shield_json_descriptions
 
             self.entry_widgets(left_column, "maxLife", 3, 0)
             self.entry_widgets(left_column, "idleTime", 3, 1)
@@ -91,11 +101,7 @@ class Application(tkinter.Frame):
 
         elif self.item_type == "armor":
 
-            with open("ItemCreator/armorJsonDescriptions.json") as file:
-                item_json_descriptions = json.load(file)
-
-            with open("ItemCreator/defaultArmor.json") as file:
-                item_json = json.load(file)
+            item_json_descriptions = armor_json_descriptions
 
             self.entry_widgets(left_column, "price", 3, 0)
             self.entry_widgets(left_column, "perc", 3, 1)
@@ -107,11 +113,7 @@ class Application(tkinter.Frame):
 
         elif self.item_type == "clip":
 
-            with open("ItemCreator/clipJsonDescriptions.json") as file:
-                item_json_descriptions = json.load(file)
-
-            with open("ItemCreator/defaultClip.json") as file:
-                item_json = json.load(file)
+            item_json_descriptions = clip_json_descriptions
 
             self.entry_widgets(left_column, "price", 3, 0)
             self.entry_widgets(left_column, "displayName", 10, 1)
@@ -134,18 +136,31 @@ class Application(tkinter.Frame):
             left_column.destroy()
         except AttributeError:
             print("No column(s)")
-        frame = tkinter.Frame(self)
-        frame.grid()
+
+        self.frame = tkinter.Frame(self)
+        self.frame.grid()
 
         def choose(chosen_type):
+            global item_json
             self.item_type = chosen_type
-            frame.destroy()
+            if self.item_type == "gun":
+                item_json = gun_json
+
+            elif self.item_type == "clip":
+                item_json = clip_json
+
+            if self.item_type == "shield":
+                item_json = shield_json
+
+            elif self.item_type == "armor":
+                item_json = armor_json
+
             self.create_widgets()
 
-        tkinter.Button(frame, command=lambda: choose("shield"), text="Shield").grid(row=0, sticky=sticky_we)
-        tkinter.Button(frame, command=lambda: choose("gun"), text="Gun").grid(row=1, sticky=sticky_we)
-        tkinter.Button(frame, command=lambda: choose("armor"), text="Armor").grid(row=2, sticky=sticky_we)
-        tkinter.Button(frame, command=lambda: choose("clip"), text="Clip").grid(row=3, sticky=sticky_we)
+        tkinter.Button(self.frame, command=lambda: choose("shield"), text="Shield").grid(row=0, sticky=sticky_we)
+        tkinter.Button(self.frame, command=lambda: choose("gun"), text="Gun").grid(row=1, sticky=sticky_we)
+        tkinter.Button(self.frame, command=lambda: choose("armor"), text="Armor").grid(row=2, sticky=sticky_we)
+        tkinter.Button(self.frame, command=lambda: choose("clip"), text="Clip").grid(row=3, sticky=sticky_we)
 
     # right column items
 
@@ -227,18 +242,38 @@ class Application(tkinter.Frame):
 
     # inserts default values into fields
     def insert_default_values(self):
+        global item_json
         for key in self.entries.keys():
             self.entries[key].delete(0)
             self.entries[key].insert(0, item_json[key])
 
 def loadItemJSON():
-    global hull_json, default_hull_json
+
+    global item_json
     name = filedialog.askopenfilename(filetypes=[("JSON files", ".json"), ("All Files", "*")], parent=app, initialdir="~")
     # for whatever reason, filedialogs returns either () or "" on Cancel
     if name == () or name == "":
         return
-    hull_json = {**default_hull_json, **json.load(open(name))}
-    app.configure_ability_on_load()
+
+    with open(name) as file:
+        jsonFile = json.load(file)
+
+
+    if jsonFile.keys() == gun_json.keys():
+        app.item_type = "gun"
+        print("Item file detected: Gun")
+    elif jsonFile.keys() == clip_json.keys():
+        app.item_type = "clip"
+        print("Item file detected: Clip")
+    elif jsonFile.keys() == armor_json.keys():
+        app.item_type = "armor"
+        print("Item file detected: Armor")
+    elif jsonFile.keys() == shield_json.keys():
+        app.item_type = "shield"
+        print("Item file detected: Shield")
+
+    item_json = jsonFile
+    app.create_widgets()
 
 
 def dumpItemJSON():
