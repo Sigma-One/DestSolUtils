@@ -1,7 +1,12 @@
+#! /usr/bin/env python3
+
 import pygame
 from tkinter import Tk
 from tkinter import filedialog
-import json
+
+
+import jsonUtils
+
 
 shapes = []
 current_shape = 0
@@ -15,31 +20,6 @@ quit = False
 selected = None
 Tk().withdraw()
 
-def dump_node_json():
-    export_file_name = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")], initialdir="~")
-    if export_file_name == "" or export_file_name == ():
-        return
-
-    json_file = []
-
-    rigidBody = {}
-    polygons = []
-
-    for i in range(len(shapes)):
-        json_file.append([])
-        for j in shapes[i]:
-
-            pos_dict = {}
-
-            pos_dict["x"] = j.pos[0]
-            pos_dict["y"] = j.pos[1]
-            polygons.append([pos_dict])
-
-    rigidBody["polygons"] = polygons
-    json_file.append(rigidBody)
-
-    with open(export_file_name, "w") as export_file:
-        json.dump(json_file, export_file, indent=2, sort_keys=True)
 
 # Define Node class
 class Node():
@@ -71,7 +51,7 @@ pygame.init()
 screen=pygame.display.set_mode([WinX, WinY], pygame.RESIZABLE)
 
 while not quit:
-    print(pygame.mouse.get_pos())
+    #print(pygame.mouse.get_pos())
 
     # Handle inputs
     for event in pygame.event.get():
@@ -119,7 +99,7 @@ while not quit:
                 add_node((10, 10))
 
             elif event.key == pygame.K_s:
-                dump_node_json()
+                jsonUtils.dumpNodes(shapes)
 
             elif event.key == pygame.K_n:
                 shapes.append([])
